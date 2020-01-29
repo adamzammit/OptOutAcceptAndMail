@@ -87,7 +87,7 @@
 				     }
 				$token = $this->event->get("token");
 			     $survey = $this->event->get("survey");
-				$url = Yii::app()->createUrl('plugins/direct', array('plugin' => $this->name, 'surveyId' => $survey, "token" => $token["token"] ));
+				$url = Yii::app()->createAbsoluteUrl('plugins/direct', array('plugin' => "OptOutAcceptAndMail", 'surveyId' => $survey, "token" => $token["token"] ));
 			     $this->event->set("body",str_replace("NEWOPTOUTURL",$url,$emailbody));
 			     return;
     }
