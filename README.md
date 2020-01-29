@@ -1,12 +1,21 @@
-# LTIPlugin
-LimeSurvey Plugin that allows LimeSurvey to act as an LTI provider. 
+# OptOutAcceptAndMail
+LimeSurvey Plugin that creates a new OptOut page at /index.php/plugins/direct/plugin/OptOutAcceptAndMail with customisable text, and the ability to email the participant / administrator when opting out
 
+The structure of the URL is:
+
+/index.php/plugins/direct/plugin/OptOutAcceptAndMail/surveyId/SURVEYHERE/token/TOKENHERE/
+
+So when referring to it in an email invitation use the following string:
+
+NEWOPTOUTURL
+
+and the plugin will replace it.
 
 ## Installation
 
-Download the zip from the [releases](https://github.com/adamzammit/LTIPlugin/releases) page and extract to your plugins folder. You can also clone directly from git: go to your plugins directory and type 
+Download the zip from the [releases](https://github.com/adamzammit/OptOutAcceptAndMail/releases) page and extract to your plugins folder. You can also clone directly from git: go to your plugins directory and type 
 ```
-git clone https://github.com/adamzammit/LTIPlugin.git LTIPlugin
+git clone https://github.com/adamzammit/OptOutAcceptAndMail.git OptOutAcceptAndMail
 ```
 ## Security
 
