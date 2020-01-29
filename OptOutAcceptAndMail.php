@@ -30,6 +30,12 @@
 
 
 	protected $settings = array(
+						'sInfo' => array (
+								'type' => 'info',
+								'label' => 'Please use the string NEWOPTOUTURL in your email templates for this function to operate',
+								'help' => 'This plugin will replace NEWOPTOUTURL in email templates with the URL to this function',
+						),
+
 			'bUse' => array (
 					'type' => 'select',
 					'options' => array (
@@ -167,7 +173,12 @@
       $oEvent->set("surveysettings.{$this->id}", array(
 				'name' => get_class ( $this ),
 				'settings' => array (
-						'bUse' => array (
+						'sInfo' => array (
+								'type' => 'info',
+								'label' => 'Please use the string NEWOPTOUTURL in your email templates for this function to operate',
+								'help' => 'This plugin will replace NEWOPTOUTURL in email templates with the URL to this function',
+						),
+					'bUse' => array (
 								'type' => 'select',
 								'label' => 'Enable the opt out page for this survey?',
 								'options' => array (
