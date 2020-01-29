@@ -131,7 +131,7 @@
 				$emailtext = ($this->get('bEmailTextOverwrite','Survey',$iSurveyId)==='1') ? $this->get('sEmailText','Survey',$iSurveyId) : $this->get('sEmailText',null,null,$this->settings['sEmailText']);
 				$emailsubject = ($this->get('bEmailTextOverwrite','Survey',$iSurveyId)==='1') ? $this->get('sEmailSubject','Survey',$iSurveyId) : $this->get('sEmailSubject',null,null,$this->settings['sEmailSubject']);
 				$token = Token::model($iSurveyId)->findByToken($sToken);
-				SendEmailMessage($emailtext,$emailsubject,array($token->email,$aSurveyInfo['adminemail']),$aSurveyInfo['adminemail'],'LimeSurvey');
+				SendEmailMessage($emailtext,$emailsubject,array($token->email,$aSurveyInfo['adminemail']),$aSurveyInfo['adminemail'],'LimeSurvey',true);
 
 			}
 			//redirect to opt out page
@@ -153,7 +153,7 @@
 			$renderData['aSurveyInfo']['active'] = 'Y'; // Didn't show the default warning
 		        $renderData['aSurveyInfo']['options']['ajaxmode'] = "off"; // Try to disable ajax mode
 		        $renderData['aSurveyInfo']['include_content'] = 'optin';
-		        $renderData['aSurveyInfo']['optin_message'] = $text . "<br/>" . "<a href='/" . Yii::app()->request->getPathInfo() ."/accept/accept' class='btn btn-default'>Opt out</a>";
+		        $renderData['aSurveyInfo']['optin_message'] = $text . "<br/>" . "<a href='" . Yii::app()->createUrl('plugins/direct', array('plugin' => "OptOutAcceptAndMail", 'surveyId' => $iSurveyId, "token" => $sToken, "accept" => "accept" )) ."' class='btn btn-default'>Opt out</a>";
 		        Yii::app()->twigRenderer->renderTemplateFromFile('layout_global.twig', $renderData,false);
 		        Yii::app()->end();
 
