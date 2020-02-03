@@ -52,6 +52,12 @@
 					'label' => 'The text to appear on the opt out page',
 					'help' => 'Overwritable in each Survey setting' 
 			),
+		    'sConfirmText' => array (
+					'type' => 'html',
+					'default' => 'You have been successfully opted out',
+					'label' => 'The text to appear on the opt out confirmation page',
+					'help' => 'Overwritable in each Survey setting' 
+			),
 			'bUseEmail' => array (
 					'type' => 'select',
 					'options' => array (
@@ -92,6 +98,44 @@
 			     return;
     }
 
+    private function doReplace($iSurveyId,$text,$sToken)
+    {
+        LimeExpressionManager::singleton()->loadTokenInformation($iSurveyId, $sToken, false);
+            //run template replace on text with token
+            $aTokenReplacements = array();
+            foreach ($token->attributes as $attribute => $value) {
+                $aTokenReplacements[strtoupper($attribute)] = $value;
+            }
+            return LimeExpressionManager::ProcessString($text, null, $aTokenReplacements, 3, 1, false, false, true);
+
+
+
+    }
+
+
+    private function renderTemplate($iSurveyId,$text,$sToken)
+    {
+			            $oSurvey = Survey::model()->findByPk($iSurveyId);
+			            if(!$oSurvey) {
+					                    $iSurveyId = null;
+							                }
+				                if($oSurvey) {
+										                   $language = $oSurvey->language;
+												                        App()->setLanguage($language);
+									                $renderData['aSurveyInfo'] = getSurveyInfo($iSurveyId,$language);
+									                Template::model()->getInstance(null, $iSurveyId);
+                                }
+
+            $text = $this->doReplace($iSurveyId,$text,$sToken); 
+
+			$renderData['aSurveyInfo']['active'] = 'Y'; // Didn't show the default warning
+		        $renderData['aSurveyInfo']['options']['ajaxmode'] = "off"; // Try to disable ajax mode
+		        $renderData['aSurveyInfo']['include_content'] = 'optin';
+                $renderData['aSurveyInfo']['optin_message'] = $text;
+                Yii::app()->twigRenderer->renderTemplateFromFile('layout_global.twig', $renderData,false);
+		        Yii::app()->end();
+    }
+
 
 
     public function newDirectRequest()
@@ -124,39 +168,38 @@
 	$aSurveyInfo = getSurveyInfo($iSurveyId);
 
 	if (!(($this->get('bUse','Survey',$iSurveyId)==0)||(($this->get('bUse','Survey',$iSurveyId)==2) && ($this->get('bUse',null,null,$this->settings['bUse'])==0)))) { //if enabled for this survey
+        $token = Token::model($iSurveyId)->findByToken($sToken);
+        if (!isset($token)) {
+            die("Invalid token");
+        }   
 		//if accepted, send email then redirect to original opt out page to action opt out
 		if (Yii::app()->request->getQuery('accept') != NULL) {
 			if (!(($this->get('bUseEmail','Survey',$iSurveyId)==0)||(($this->get('bUseEmail','Survey',$iSurveyId)==2) && ($this->get('bUseEmail',null,null,$this->settings['bUseEmail'])==0)))) { //if enabled for this survey
 				//send email to participant and CC survey admin
 				$emailtext = ($this->get('bEmailTextOverwrite','Survey',$iSurveyId)==='1') ? $this->get('sEmailText','Survey',$iSurveyId) : $this->get('sEmailText',null,null,$this->settings['sEmailText']);
-				$emailsubject = ($this->get('bEmailTextOverwrite','Survey',$iSurveyId)==='1') ? $this->get('sEmailSubject','Survey',$iSurveyId) : $this->get('sEmailSubject',null,null,$this->settings['sEmailSubject']);
-				$token = Token::model($iSurveyId)->findByToken($sToken);
+                $emailsubject = ($this->get('bEmailTextOverwrite','Survey',$iSurveyId)==='1') ? $this->get('sEmailSubject','Survey',$iSurveyId) : $this->get('sEmailSubject',null,null,$this->settings['sEmailSubject']);
+                $emailtext = $this->doReplace($iSurveyId,$emailtext,$sToken);
+                $emailsubject = $this->doReplace($iSurveyId,$emailsubject,$sToken);
 				SendEmailMessage($emailtext,$emailsubject,array($token->email,$aSurveyInfo['adminemail']),$aSurveyInfo['adminemail'],'LimeSurvey',true);
 
 			}
-			//redirect to opt out page
-			Yii::app()->getController()->redirect(Yii::app()->createUrl('optout/removetokens', array('surveyid' => $iSurveyId, 'token' => $sToken )));
+			//OLD: redirect to opt out page
+            //Yii::app()->getController()->redirect(Yii::app()->createUrl('optout/removetokens', array('surveyid' => $iSurveyId, 'token' => $sToken )));
+            //NEW: Display new opt out text and opt out manually
+            $text = ($this->get('bTextOverwrite','Survey',$iSurveyId)==='1') ? $this->get('sConfirmText','Survey',$iSurveyId) : $this->get('sConfirmText',null,null,$this->settings['sConfirmText']);
+
+            //need to opt out token here
+            $token->emailstatus = 'OptOut';
+            $token->save();
+ 
+            //display text
+            $this->renderTemplate($iSurveyId,$text,$sToken);
 		} else {
 			//display opt out page with link to acceptance of opt out
-			$text = ($this->get('bTextOverwrite','Survey',$iSurveyId)==='1') ? $this->get('sText','Survey',$iSurveyId) : $this->get('sText',null,null,$this->settings['sText']);
-			            $oSurvey = Survey::model()->findByPk($iSurveyId);
-			            if(!$oSurvey) {
-					                    $iSurveyId = null;
-							                }
-				                if($oSurvey) {
-										                   $language = $oSurvey->language;
-												                        App()->setLanguage($language);
-									                $renderData['aSurveyInfo'] = getSurveyInfo($iSurveyId,$language);
-									                Template::model()->getInstance(null, $iSurveyId);
-											            }
-
-			$renderData['aSurveyInfo']['active'] = 'Y'; // Didn't show the default warning
-		        $renderData['aSurveyInfo']['options']['ajaxmode'] = "off"; // Try to disable ajax mode
-		        $renderData['aSurveyInfo']['include_content'] = 'optin';
-		        $renderData['aSurveyInfo']['optin_message'] = $text . "<br/>" . "<a href='" . Yii::app()->createUrl('plugins/direct', array('plugin' => "OptOutAcceptAndMail", 'surveyId' => $iSurveyId, "token" => $sToken, "accept" => "accept" )) ."' class='btn btn-default'>Opt out</a>";
-		        Yii::app()->twigRenderer->renderTemplateFromFile('layout_global.twig', $renderData,false);
-		        Yii::app()->end();
-
+            $text = ($this->get('bTextOverwrite','Survey',$iSurveyId)==='1') ? $this->get('sText','Survey',$iSurveyId) : $this->get('sText',null,null,$this->settings['sText']);
+            //add button
+            $text = $text . "<br/>" . "<a href='" . Yii::app()->createUrl('plugins/direct', array('plugin' => "OptOutAcceptAndMail", 'surveyId' => $iSurveyId, "token" => $sToken, "accept" => "accept" )) ."' class='btn btn-default'>Opt out</a>";
+            $this->renderTemplate($iSurveyId,$text,$sToken);
 		}
 	} else {
 		die("Unavailable");
@@ -206,7 +249,14 @@
 								'label' => 'The text to appear on the opt out page',
 								'help' => 'Leave blank to use global setting',
 								'current' => $this->get ( 'sText', 'Survey', $oEvent->get ( 'survey' ) ) 
-						),
+                            ),
+                    'sConfirmText' => array (
+		    			'type' => 'html',
+       					'label' => 'The text to appear on the opt out confirmation page',
+    					'help' => 'Leave blank to use global setting',
+                        'current' => $this->get ( 'sConfirmText', 'Survey', $oEvent->get ( 'survey' ) ) 
+        			),
+	
 						'bUseEmail' => array (
 								'type' => 'select',
 								'label' => 'Send email to participant and adminsitrator notifying of opt out',
