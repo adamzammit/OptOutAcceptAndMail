@@ -100,6 +100,7 @@
 
     private function doReplace($iSurveyId,$text,$sToken)
     {
+        $token = Token::model($iSurveyId)->findByToken($sToken);
         LimeExpressionManager::singleton()->loadTokenInformation($iSurveyId, $sToken, false);
             //run template replace on text with token
             $aTokenReplacements = array();
