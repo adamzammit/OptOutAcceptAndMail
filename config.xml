@@ -4,11 +4,11 @@
         <name>OptOutAcceptAndMail</name>
         <type>plugin</type>
         <creationDate>2020-01-30</creationDate>
-        <lastUpdate>2020-01-30</lastUpdate>
+        <lastUpdate>2020-02-03</lastUpdate>
         <author>Adam Zammit</author>
         <authorUrl>https://acspri.org.au/</authorUrl>
         <supportUrl>https://acspri.org.au/</supportUrl>
-        <version>1.0.0</version>
+        <version>1.1.0</version>
         <license>GNU General Public License v3.0</license>
         <description><![CDATA[Add a new OptOut page that is customisable and can send an email on submission]]></description>
     </metadata>
